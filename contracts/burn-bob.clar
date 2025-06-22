@@ -5,12 +5,11 @@
 (define-constant CONTRACT-OWNER tx-sender)
 (define-constant BURN-ADDRESS 'SP000000000000000000002Q6VF78) ;; cant-be-evil.stx actual address
 (define-constant DAILY-BURN-AMOUNT u1000000) ;; 1 BOB with 6 decimals
-(define-constant BOB-TOKEN-CONTRACT 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G.built-on-bitcoin-stxcity)
 
 ;; Epoch system using Bitcoin block timing (tenure-height)
 (define-constant EPOCH-LENGTH u144) ;; ~1 day at ~10min/block (Bitcoin timing)
 (define-constant GENESIS-BLOCK tenure-height)
-(define-constant GENESIS-EPOCH (calc-epoch GENESIS-BLOCK))
+(define-constant GENESIS-EPOCH u0) ;; Always epoch 0
 
 ;; Error constants
 (define-constant ERR-UNAUTHORIZED (err u401))
@@ -21,17 +20,17 @@
 ;; Data structures
 (define-map epoch-burns 
   { user: principal, epoch: uint } 
-  { block-height: uint, burned: bool }
+  { block-height: uint, burned: bool }  ;; block-height = Bitcoin block when burn happened
 )
 
 (define-map user-stats 
   principal 
   { 
     epoch: uint,        ;; last epoch user was active
-    total-burns: uint,  ;; total epochs burned
-    streak-start: uint, ;; epoch when current streak started
-    streak-end: uint,   ;; last epoch in current streak
-    max-streak: uint    ;; longest streak ever
+    total-burns: uint,  ;; total epochs user has burned
+    streak-start: uint, ;; EPOCH when current streak started
+    streak-end: uint,   ;; EPOCH when current streak last continued  
+    max-streak: uint    ;; longest streak ever (in epochs)
   }
 )
 
@@ -62,6 +61,7 @@
   )
 )
 
+;; come back to this later
 (define-read-only (get-current-streak (user principal))
   (let ((stats (get-user-stats user))
         (current (current-epoch)))
@@ -100,13 +100,13 @@
     (asserts! (not (has-burned-this-epoch user)) ERR-ALREADY-BURNED-TODAY)
     
     ;; Transfer 1 BOB to burn address
-    (try! (contract-call? BOB-TOKEN-CONTRACT transfer 
+    (try! (contract-call? 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G.built-on-bitcoin-stxcity transfer 
            DAILY-BURN-AMOUNT 
            user 
            BURN-ADDRESS 
            (some 0x6461696c792d626f622d6275726e))) ;; "daily-bob-burn" in hex
     
-    ;; Record the burn
+    ;; Record the burn  
     (map-set epoch-burns 
       { user: user, epoch: current }
       { block-height: tenure-height, burned: true }
@@ -125,11 +125,12 @@
       (new-streak-end current)
       (current-streak-length (+ (- new-streak-end new-streak-start) u1))
       (new-max-streak (max (get max-streak current-stats) current-streak-length))
+      (new-total-burns (+ (get total-burns current-stats) u1))
     )
       ;; Update user stats
       (map-set user-stats user {
         epoch: current,
-        total-burns: (+ (get total-burns current-stats) u1),
+        total-burns: new-total-burns,
         streak-start: new-streak-start,
         streak-end: new-streak-end,
         max-streak: new-max-streak
@@ -141,37 +142,15 @@
         user: user,
         epoch: current,
         block-height: tenure-height,
-        total-burns: (+ (get total-burns current-stats) u1),
+        total-burns: new-total-burns,
         current-streak: current-streak-length,
         max-streak: new-max-streak
       })
       
-      (ok {
-        epoch: current,
-        total-burns: (+ (get total-burns current-stats) u1),
-        current-streak: current-streak-length
-      })
+      (ok true)
     )
   )
 )
 
 ;; Utility function
 (define-read-only (max (x uint) (y uint)) (if (>= x y) x y))
-
-;; Read-only functions for leaderboard data
-(define-read-only (get-leaderboard-by-total (limit uint))
-  ;; This would need to be implemented with a more complex data structure
-  ;; For now, return empty list - frontend can query individual users
-  (list)
-)
-
-(define-read-only (get-leaderboard-by-streak (limit uint))
-  ;; This would need to be implemented with a more complex data structure
-  ;; For now, return empty list - frontend can query individual users
-  (list)
-)
-
-;; Get time until next epoch (approximate seconds)
-(define-read-only (get-seconds-until-next-epoch)
-  (* (get-blocks-until-next-epoch) u600) ;; ~10 minutes per Bitcoin block
-)
