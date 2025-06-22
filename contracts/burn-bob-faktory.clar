@@ -59,14 +59,15 @@
   )
 )
 
-;; come back to this later
 (define-read-only (get-current-streak (user principal))
   (let ((stats (get-user-stats user))
-        (current (current-epoch)))
-    (if (and (> (get streak-end stats) u0)
-             (or (is-eq (get streak-end stats) current)
-                 (is-eq (get streak-end stats) (- current u1))))
-        (+ (- (get streak-end stats) (get streak-start stats)) u1)
+        (current (current-epoch))
+        (streak-e (get streak-end stats)))
+    (if (and (> streak-e u0)
+             (or (is-eq streak-e current)
+                 (and (> current u0)  ;; Add this check
+                      (is-eq streak-e (- current u1)))))
+        (+ (- streak-e (get streak-start stats)) u1)
         u0)
   )
 )
@@ -83,6 +84,7 @@
 )
 
 ;; Main burn function
+;; Main burn function
 (define-public (daily-burn)
   (let (
     (current (current-epoch))
@@ -97,7 +99,7 @@
            DAILY-BURN-AMOUNT 
            user 
            BURN-ADDRESS 
-           (some 0x6461696c792d626f622d6275726e))) ;; "daily-bob-burn" in hex
+           (some 0x626f62206f722062757374))) ;;  "bob or bust" in hex
     
     ;; Record the burn  
     (map-set epoch-burns 
@@ -105,10 +107,12 @@
       { block-height: burn-block-height, burned: true }
     )
     
-    ;; Calculate new streak
+    ;; Calculate new streak - FIXED VERSION
     (let (
       (last-active-epoch (get streak-end current-stats))
-      (is-continuing-streak (is-eq last-active-epoch (- current u1)))
+      ;; Prevent underflow by checking if current > 0
+      (is-continuing-streak (and (> current u0)
+                                (is-eq last-active-epoch (- current u1))))
       (new-streak-start (if is-continuing-streak 
                            (get streak-start current-stats)
                            current))
