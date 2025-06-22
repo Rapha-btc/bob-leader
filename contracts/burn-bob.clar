@@ -4,6 +4,7 @@
 ;; Constants
 (define-constant BURN-ADDRESS 'SP000000000000000000002Q6VF78) ;; cant-be-evil.stx actual address
 (define-constant DAILY-BURN-AMOUNT u1000000) ;; 1 BOB with 6 decimals
+(define-constant THIS-CONTRACT (as-contract tx-sender))
 
 ;; Epoch system using Bitcoin block timing (tenure-height)
 (define-constant EPOCH-LENGTH u144) ;; ~1 day at ~10min/block (Bitcoin timing)
@@ -137,6 +138,8 @@
       
       ;; Emit event
       (print {
+        leader-contract: THIS-CONTRACT,
+        token-contract: 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G.built-on-bitcoin-stxcity,
         event: "daily-burn",
         user: user,
         epoch: current,
