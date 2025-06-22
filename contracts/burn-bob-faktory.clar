@@ -63,12 +63,11 @@
   (let ((stats (get-user-stats user))
         (current (current-epoch))
         (streak-e (get streak-end stats)))
-    (if (and (> streak-e u0)
-             (or (is-eq streak-e current)
-                 (and (> current u0)  ;; Add this check
-                      (is-eq streak-e (- current u1)))))
+    (if (or (is-eq streak-e current)
+            (and (> current u0)
+                 (is-eq streak-e (- current u1))))
         (+ (- streak-e (get streak-start stats)) u1)
-        u0)
+        u0)  ;; Back to u0 default
   )
 )
 

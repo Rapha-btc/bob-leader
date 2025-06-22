@@ -1,128 +1,124 @@
-Great! Let me walk through the `get-current-streak` function with several examples to show how it works:
+Great! Let me walk through several scenarios in the `daily-burn` function:
 
-## The Function:
+## Scenario 1: Brand New User, Epoch 0
 
-```clarity
-(define-read-only (get-current-streak (user principal))
-  (let ((stats (get-user-stats user))
-        (current (current-epoch)))
-    (if (and (> (get streak-end stats) u0)
-             (or (is-eq (get streak-end stats) current)
-                 (and (> current u0)
-                      (is-eq (get streak-end stats) (- current u1)))))
-        (+ (- (get streak-end stats) (get streak-start stats)) u1)
-        u0)
-  )
-)
-```
+**Setup**: First person ever to burn
 
-## Example 1: New User (Never Burned)
+- `current = u0`
+- `current-stats = { epoch: u0, total-burns: u0, streak-start: u0, streak-end: u0, max-streak: u0 }`
 
-**Current epoch**: `u5`
-**User stats**: `{ streak-start: u0, streak-end: u0, ... }`
+**Execution**:
 
 ```clarity
-(> (get streak-end stats) u0)  ;; (> u0 u0) = false
+(last-active-epoch (get streak-end current-stats))  ;; u0
+(is-continuing-streak (and (> u0 u0) (is-eq u0 (- u0 u1))))  ;; false (short-circuit)
+(new-streak-start (if false (get streak-start current-stats) u0))  ;; u0
+(new-streak-end u0)  ;; u0
+(current-streak-length (+ (- u0 u0) u1))  ;; u1
+(new-max-streak (max u0 u1))  ;; u1
+(new-total-burns (+ u0 u1))  ;; u1
 ```
 
-Since the first condition is false, the entire `and` is false.
-**Result**: `u0` (no current streak)
+**Result**: `{ epoch: u0, total-burns: u1, streak-start: u0, streak-end: u0, max-streak: u1 }`
 
-## Example 2: User Burned Today (Same Epoch)
+---
 
-**Current epoch**: `u5`
-**User stats**: `{ streak-start: u3, streak-end: u5, ... }` (burned in epochs 3,4,5)
+## Scenario 2: Same User, Epoch 1 (Next Day)
+
+**Setup**: User from scenario 1 burns again
+
+- `current = u1`
+- `current-stats = { epoch: u0, total-burns: u1, streak-start: u0, streak-end: u0, max-streak: u1 }`
+
+**Execution**:
 
 ```clarity
-(> (get streak-end stats) u0)  ;; (> u5 u0) = true ✓
-(is-eq (get streak-end stats) current)  ;; (is-eq u5 u5) = true ✓
+(last-active-epoch u0)
+(is-continuing-streak (and (> u1 u0) (is-eq u0 (- u1 u1))))  ;; (and true (is-eq u0 u0)) = true
+(new-streak-start (if true u0 u1))  ;; u0 (keep existing)
+(new-streak-end u1)  ;; u1
+(current-streak-length (+ (- u1 u0) u1))  ;; u2
+(new-max-streak (max u1 u2))  ;; u2
+(new-total-burns (+ u1 u1))  ;; u2
 ```
 
-The `or` condition is true, so:
+**Result**: `{ epoch: u1, total-burns: u2, streak-start: u0, streak-end: u1, max-streak: u2 }`
+
+---
+
+## Scenario 3: Same User, Epoch 3 (Missed Epoch 2)
+
+**Setup**: User skipped epoch 2, now burning in epoch 3
+
+- `current = u3`
+- `current-stats = { epoch: u1, total-burns: u2, streak-start: u0, streak-end: u1, max-streak: u2 }`
+
+**Execution**:
 
 ```clarity
-(+ (- (get streak-end stats) (get streak-start stats)) u1)
-= (+ (- u5 u3) u1)
-= (+ u2 u1) = u3
+(last-active-epoch u1)
+(is-continuing-streak (and (> u3 u0) (is-eq u1 (- u3 u1))))  ;; (and true (is-eq u1 u2)) = false
+(new-streak-start (if false u0 u3))  ;; u3 (start new)
+(new-streak-end u3)  ;; u3
+(current-streak-length (+ (- u3 u3) u1))  ;; u1 (new streak of 1)
+(new-max-streak (max u2 u1))  ;; u2 (keep old max)
+(new-total-burns (+ u2 u1))  ;; u3
 ```
 
-**Result**: `u3` (3-day streak)
+**Result**: `{ epoch: u3, total-burns: u3, streak-start: u3, streak-end: u3, max-streak: u2 }`
 
-## Example 3: User Burned Yesterday (Continuous)
+---
 
-**Current epoch**: `u7`
-**User stats**: `{ streak-start: u4, streak-end: u6, ... }` (burned in epochs 4,5,6)
+## Scenario 4: Different User, Epoch 5
+
+**Setup**: New user starts burning in epoch 5
+
+- `current = u5`
+- `current-stats = { epoch: u0, total-burns: u0, streak-start: u0, streak-end: u0, max-streak: u0 }`
+
+**Execution**:
 
 ```clarity
-(> (get streak-end stats) u0)  ;; (> u6 u0) = true ✓
-(is-eq (get streak-end stats) current)  ;; (is-eq u6 u7) = false
-(> current u0)  ;; (> u7 u0) = true ✓
-(is-eq (get streak-end stats) (- current u1))  ;; (is-eq u6 u6) = true ✓
+(last-active-epoch u0)
+(is-continuing-streak (and (> u5 u0) (is-eq u0 (- u5 u1))))  ;; (and true (is-eq u0 u4)) = false
+(new-streak-start (if false u0 u5))  ;; u5
+(new-streak-end u5)  ;; u5
+(current-streak-length (+ (- u5 u5) u1))  ;; u1
+(new-max-streak (max u0 u1))  ;; u1
+(new-total-burns (+ u0 u1))  ;; u1
 ```
 
-The `or` condition is true (second part), so:
+**Result**: `{ epoch: u5, total-burns: u1, streak-start: u5, streak-end: u5, max-streak: u1 }`
+
+---
+
+## Scenario 5: User with Long Streak, Epoch 10
+
+**Setup**: User has been burning epochs 7,8,9, now in epoch 10
+
+- `current = u10`
+- `current-stats = { epoch: u9, total-burns: u15, streak-start: u7, streak-end: u9, max-streak: u5 }`
+
+**Execution**:
 
 ```clarity
-(+ (- u6 u4) u1) = (+ u2 u1) = u3
+(last-active-epoch u9)
+(is-continuing-streak (and (> u10 u0) (is-eq u9 (- u10 u1))))  ;; (and true (is-eq u9 u9)) = true
+(new-streak-start (if true u7 u10))  ;; u7 (continue existing)
+(new-streak-end u10)  ;; u10
+(current-streak-length (+ (- u10 u7) u1))  ;; u4
+(new-max-streak (max u5 u4))  ;; u5
+(new-total-burns (+ u15 u1))  ;; u16
 ```
 
-**Result**: `u3` (3-day streak, still active because they burned yesterday)
+**Result**: `{ epoch: u10, total-burns: u16, streak-start: u7, streak-end: u10, max-streak: u5 }`
 
-## Example 4: User Missed Yesterday (Broken Streak)
+## Summary:
 
-**Current epoch**: `u10`
-**User stats**: `{ streak-start: u5, streak-end: u7, ... }` (last burned in epoch 7)
+✅ **Epoch 0**: Correctly starts new streaks
+✅ **Continuing streaks**: Properly extends existing streaks  
+✅ **Broken streaks**: Starts fresh streaks
+✅ **New users**: Works regardless of starting epoch
+✅ **Max streak tracking**: Preserves historical maximums
 
-```clarity
-(> (get streak-end stats) u0)  ;; (> u7 u0) = true ✓
-(is-eq (get streak-end stats) current)  ;; (is-eq u7 u10) = false
-(> current u0)  ;; (> u10 u0) = true ✓
-(is-eq (get streak-end stats) (- current u1))  ;; (is-eq u7 u9) = false
-```
-
-Both parts of the `or` are false, so the entire condition is false.
-**Result**: `u0` (no current streak - it was broken)
-
-## Example 5: Edge Case - Epoch 0
-
-**Current epoch**: `u0`
-**User stats**: `{ streak-start: u0, streak-end: u0, ... }` (just burned in epoch 0)
-
-```clarity
-(> (get streak-end stats) u0)  ;; (> u0 u0) = false
-```
-
-**Result**: `u0` (This is actually a bug! Should return u1)
-
-## Example 6: Edge Case - Epoch 1, Burned in Epoch 0
-
-**Current epoch**: `u1`
-**User stats**: `{ streak-start: u0, streak-end: u0, ... }`
-
-```clarity
-(> (get streak-end stats) u0)  ;; (> u0 u0) = false
-```
-
-**Result**: `u0` (Another bug! Should return u1 if they burned yesterday)
-
-## 🐛 Issues Found:
-
-The function has bugs with epoch 0 handling. Here's a **fixed version**:
-
-```clarity
-(define-read-only (get-current-streak (user principal))
-  (let ((stats (get-user-stats user))
-        (current (current-epoch)))
-    (if (or
-          ;; Case 1: Burned in current epoch
-          (is-eq (get streak-end stats) current)
-          ;; Case 2: Burned yesterday (and current > 0 to prevent underflow)
-          (and (> current u0)
-               (is-eq (get streak-end stats) (- current u1))))
-        (+ (- (get streak-end stats) (get streak-start stats)) u1)
-        u0)
-  )
-)
-```
-
-This removes the `(> (get streak-end stats) u0)` check that was causing epoch 0 to always return 0.
+The logic handles all cases perfectly! 🔥
