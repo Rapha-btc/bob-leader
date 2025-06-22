@@ -10,7 +10,7 @@
 (define-constant ERR-INVALID-PARAMETERS u403)
 (define-constant ERR-NOT-ENOUGH-FUND u101)
 
-(impl-trait 'SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard.sip-010-trait)
+;; (impl-trait 'SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard.sip-010-trait)
 
 ;; Constants
 (define-constant MAXSUPPLY u100000000000000)
@@ -118,7 +118,8 @@
 ;; ---------------------------------------------------------
 ;; Mint
 ;; ---------------------------------------------------------
-(begin
-    (try! (send-stx 'SP11WRT9TPPKP5492X3VE81CM1T74MD13SPFT527D u500000))
-    (try! (ft-mint? BOB u100000000000000 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G.built-on-bitcoin-stxcity-dex))
-)
+;; (begin
+;;     (try! (send-stx 'SP11WRT9TPPKP5492X3VE81CM1T74MD13SPFT527D u500000))
+;;     (try! (ft-mint? BOB u100000000000000 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G.built-on-bitcoin-stxcity-dex))
+;; )
+(try! (ft-mint? BOB u100000000000000 tx-sender))

@@ -5,15 +5,17 @@ authors = []
 telemetry = false
 cache_dir = './.cache'
 requirements = []
+
 [contracts.built-on-bitcoin-stxcity]
 path = 'contracts/built-on-bitcoin-stxcity.clar'
 clarity_version = 3
 epoch = 3.1
 
-[contracts.burn-bob]
-path = 'contracts/burn-bob.clar'
+[contracts.burn-bob-faktory]
+path = 'contracts/burn-bob-faktory.clar'
 clarity_version = 3
 epoch = 3.1
+
 [repl.analysis]
 passes = ['check_checker']
 

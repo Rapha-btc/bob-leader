@@ -34,8 +34,6 @@
   }
 )
 
-(define-map epoch-participants uint (list 1000 principal))
-
 ;; Helper functions
 (define-read-only (current-epoch) (calc-epoch burn-block-height))
 
@@ -56,8 +54,8 @@
 )
 
 (define-read-only (has-burned-this-epoch (user principal))
-  (let ((current-epoch (current-epoch)))
-    (is-some (map-get? epoch-burns { user: user, epoch: current-epoch }))
+  (let ((current-epoch-now (current-epoch)))
+    (is-some (map-get? epoch-burns { user: user, epoch: current-epoch-now }))
   )
 )
 
@@ -71,10 +69,6 @@
         (+ (- (get streak-end stats) (get streak-start stats)) u1)
         u0)
   )
-)
-
-(define-read-only (get-epoch-participants (epoch uint))
-  (default-to (list) (map-get? epoch-participants epoch))
 )
 
 (define-read-only (get-burn-record (user principal) (epoch uint))
@@ -94,13 +88,12 @@
     (current (current-epoch))
     (user tx-sender)
     (current-stats (get-user-stats user))
-    (participants (get-epoch-participants current))
   )
     ;; Check if user already burned this epoch
     (asserts! (not (has-burned-this-epoch user)) ERR-ALREADY-BURNED-TODAY)
     
-    ;; Transfer 1 BOB to burn address
-    (try! (contract-call? 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G.built-on-bitcoin-stxcity transfer 
+    ;; Transfer 1 BOB to burn address // 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G
+    (try! (contract-call? .built-on-bitcoin-stxcity transfer 
            DAILY-BURN-AMOUNT 
            user 
            BURN-ADDRESS 
@@ -111,9 +104,6 @@
       { user: user, epoch: current }
       { block-height: burn-block-height, burned: true }
     )
-    
-    ;; Update epoch participants
-    (map-set epoch-participants current (unwrap-panic (as-max-len? (append participants user) u1000)))
     
     ;; Calculate new streak
     (let (
