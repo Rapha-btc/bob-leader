@@ -1,8 +1,7 @@
 ;; Daily BOB Burn Leaderboard Contract
 ;; Tracks daily burns of 1 BOB token to cant-be-evil.stx using epochs
 
-; Constants
-(define-constant CONTRACT-OWNER tx-sender)
+;; Constants
 (define-constant BURN-ADDRESS 'SP000000000000000000002Q6VF78) ;; cant-be-evil.stx actual address
 (define-constant DAILY-BURN-AMOUNT u1000000) ;; 1 BOB with 6 decimals
 
