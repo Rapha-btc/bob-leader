@@ -6,9 +6,9 @@
 (define-constant DAILY-BURN-AMOUNT u1000000) ;; 1 BOB with 6 decimals
 (define-constant THIS-CONTRACT (as-contract tx-sender))
 
-;; Epoch system using Bitcoin block timing (tenure-height)
+;; Epoch system using Bitcoin block timing (burn-block-height)
 (define-constant EPOCH-LENGTH u144) ;; ~1 day at ~10min/block (Bitcoin timing)
-(define-constant GENESIS-BLOCK tenure-height)
+(define-constant GENESIS-BLOCK burn-block-height)
 (define-constant GENESIS-EPOCH u0) ;; Always epoch 0
 
 ;; Error constants
@@ -37,7 +37,7 @@
 (define-map epoch-participants uint (list 1000 principal))
 
 ;; Helper functions
-(define-read-only (current-epoch) (calc-epoch tenure-height))
+(define-read-only (current-epoch) (calc-epoch burn-block-height))
 
 (define-read-only (calc-epoch (block uint))
   (/ (- block GENESIS-BLOCK) EPOCH-LENGTH))
@@ -84,7 +84,7 @@
 ;; Get blocks until next epoch
 (define-read-only (get-blocks-until-next-epoch)
   (let ((current-epoch-start (calc-epoch-start (current-epoch))))
-    (- (+ current-epoch-start EPOCH-LENGTH) tenure-height)
+    (- (+ current-epoch-start EPOCH-LENGTH) burn-block-height)
   )
 )
 
@@ -109,7 +109,7 @@
     ;; Record the burn  
     (map-set epoch-burns 
       { user: user, epoch: current }
-      { block-height: tenure-height, burned: true }
+      { block-height: burn-block-height, burned: true }
     )
     
     ;; Update epoch participants
@@ -138,12 +138,12 @@
       
       ;; Emit event
       (print {
-        leader-contract: THIS-CONTRACT,
+        contract: THIS-CONTRACT,
         token-contract: 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G.built-on-bitcoin-stxcity,
         event: "daily-burn",
         user: user,
         epoch: current,
-        block-height: tenure-height,
+        block-height: burn-block-height,
         total-burns: new-total-burns,
         current-streak: current-streak-length,
         max-streak: new-max-streak
