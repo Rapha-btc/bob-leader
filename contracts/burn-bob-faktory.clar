@@ -93,8 +93,8 @@
     ;; Check if user already burned this epoch
     (asserts! (not (has-burned-this-epoch user)) ERR-ALREADY-BURNED-TODAY)
     
-    ;; Transfer 1 BOB to burn address // 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G
-    (try! (contract-call? .built-on-bitcoin-stxcity transfer 
+    ;; Transfer 1 BOB to burn address 
+    (try! (contract-call? 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G.built-on-bitcoin-stxcity transfer 
            DAILY-BURN-AMOUNT 
            user 
            BURN-ADDRESS 
