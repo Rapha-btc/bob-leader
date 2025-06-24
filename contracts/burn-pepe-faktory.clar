@@ -1,6 +1,6 @@
 ;; PEPE Burn-to-Play Competition Contract
 ;; Daily competition where highest burner wins 90% of total burned
-;; 9.31% gets permanently burned, 0.69% taken as fee
+;; 10% gets permanently burned, 1% taken as fee
 
 ;; Constants
 (define-constant BURN-ADDRESS 'SP000000000000000000002Q6VF78) ;; cant-be-evil.stx
@@ -290,5 +290,3 @@
     )
   )
 )
-
-(define-read-only (max (x uint) (y uint)) (if (>= x y) x y))
