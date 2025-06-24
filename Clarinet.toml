@@ -6,16 +6,17 @@ telemetry = false
 cache_dir = './.cache'
 requirements = []
 
-[contracts.built-on-bitcoin-stxcity]
-path = 'contracts/built-on-bitcoin-stxcity.clar'
+
+
+[contracts.burn-pepe-faktory]
+path = 'contracts/burn-pepe-faktory.clar'
 clarity_version = 3
 epoch = 3.1
 
-[contracts.burn-bob-faktory]
-path = 'contracts/burn-bob-faktory.clar'
+[contracts.tokensoft-token-v4k68639zxz]
+path = 'contracts/tokensoft-token-v4k68639zxz.clar'
 clarity_version = 3
 epoch = 3.1
-
 [repl.analysis]
 passes = ['check_checker']
 

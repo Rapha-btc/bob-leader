@@ -149,3 +149,5 @@
 
 ;; Utility function
 (define-read-only (max (x uint) (y uint)) (if (>= x y) x y))
+
+;; print the genesis block in initialization to share with db
