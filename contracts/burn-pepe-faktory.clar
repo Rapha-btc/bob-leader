@@ -3,10 +3,9 @@
 ;; 10% gets permanently burned, 1% taken as fee
 
 ;; Constants
-(define-constant BURN-ADDRESS 'SP000000000000000000002Q6VF78) ;; cant-be-evil.stx
-;; (define-constant PEPE-CONTRACT 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz)
+(define-constant BURN-ADDRESS 'SP000000000000000000002Q6VF78) 
 (define-constant THIS-CONTRACT (as-contract tx-sender))
-(define-constant FAKTORY 'SM3NY5HXXRNCHS1B65R78CYAC1TQ6DEMN3C0DN74S) ;; 
+(define-constant FAKTORY 'SM3NY5HXXRNCHS1B65R78CYAC1TQ6DEMN3C0DN74S) 
 
 ;; Epoch system using Bitcoin block timing
 (define-constant EPOCH-LENGTH u144) ;; ~1 day at ~10min/block
@@ -95,7 +94,7 @@
     (asserts! (> amount u0) ERR-INVALID-AMOUNT)
     
     ;; Transfer PEPE tokens to this contract first
-    (try! (contract-call? .tokensoft-token-v4k68639zxz transfer 
+    (try! (contract-call? 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz transfer 
            amount 
            user 
            THIS-CONTRACT 
@@ -134,7 +133,7 @@
       ;; Emit event
       (print {
         contract: THIS-CONTRACT,
-        token-contract: .tokensoft-token-v4k68639zxz,
+        token-contract: 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz,
         event: "burn-to-compete",
         user: user,
         epoch: current,
@@ -186,7 +185,7 @@
     )
       ;; Send winner their reward (90%)
       (if (> winner-amount u0)
-            (try! (as-contract (contract-call? .tokensoft-token-v4k68639zxz transfer 
+            (try! (as-contract (contract-call? 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz transfer 
                     winner-amount 
                     THIS-CONTRACT 
                     winner 
@@ -195,7 +194,7 @@
       
       ;; Burn tokens (9%)
       (if (> burn-amount u0)
-            (try! (as-contract (contract-call? .tokensoft-token-v4k68639zxz transfer 
+            (try! (as-contract (contract-call? 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz transfer 
                     burn-amount 
                     THIS-CONTRACT 
                     BURN-ADDRESS 
@@ -204,7 +203,7 @@
       
       ;; Send fee to contract owner (1%)
       (if (> fee-amount u0)
-            (try! (as-contract (contract-call? .tokensoft-token-v4k68639zxz transfer 
+            (try! (as-contract (contract-call? 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz transfer 
                     fee-amount 
                     THIS-CONTRACT 
                     FAKTORY
@@ -218,7 +217,7 @@
       ;; Emit settlement event
       (print {
         contract: THIS-CONTRACT,
-        token-contract: .tokensoft-token-v4k68639zxz,
+        token-contract: 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz,
         event: "epoch-settled",
         epoch: epoch,
         total-burned: total-burned,
@@ -230,6 +229,7 @@
         winner-amount: winner-amount,
         burn-amount: burn-amount,
         fee-amount: fee-amount,
+        block-height: burn-block-height,
       })
       
       (ok true)
@@ -262,7 +262,7 @@
     
     (let ((solo-user (unwrap-panic highest-burner)))
       ;; Refund all tokens to the solo participant
-      (try! (as-contract (contract-call? .tokensoft-token-v4k68639zxz transfer 
+      (try! (as-contract (contract-call? 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz transfer 
              total-burned 
              THIS-CONTRACT 
              solo-user 
@@ -275,7 +275,7 @@
       ;; Emit refund event
       (print {
         contract: THIS-CONTRACT,
-        token-contract: .tokensoft-token-v4k68639zxz,
+        token-contract: 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz,
         event: "epoch-refunded",
         epoch: epoch,
         solo-user: solo-user,
