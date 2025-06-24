@@ -6,7 +6,7 @@
 (define-constant BURN-ADDRESS 'SP000000000000000000002Q6VF78) ;; cant-be-evil.stx
 ;; (define-constant PEPE-CONTRACT 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz)
 (define-constant THIS-CONTRACT (as-contract tx-sender))
-(define-constant FAKTORY tx-sender) ;; SM3NY5HXXRNCHS1B65R78CYAC1TQ6DEMN3C0DN74S
+(define-constant FAKTORY 'SM3NY5HXXRNCHS1B65R78CYAC1TQ6DEMN3C0DN74S) ;; 
 
 ;; Epoch system using Bitcoin block timing
 (define-constant EPOCH-LENGTH u144) ;; ~1 day at ~10min/block
