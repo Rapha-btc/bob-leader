@@ -5,11 +5,13 @@ authors = []
 telemetry = false
 cache_dir = './.cache'
 requirements = []
-
-
-
 [contracts.burn-pepe-faktory]
 path = 'contracts/burn-pepe-faktory.clar'
+clarity_version = 3
+epoch = 3.1
+
+[contracts.fakfun-bob-faktory]
+path = 'contracts/fakfun-bob-faktory.clar'
 clarity_version = 3
 epoch = 3.1
 
