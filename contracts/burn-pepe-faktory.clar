@@ -66,7 +66,7 @@
 (define-read-only (get-game-info (game-id uint))
   (map-get? games game-id))
 
-(define-read-only (get-active-game) ;; last active one
+(define-read-only (get-current-game) ;; latest created game
   (let ((current-id (get-current-game-id)))
     (if (is-eq current-id u0)
         none
