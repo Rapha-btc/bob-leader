@@ -1,3 +1,4 @@
+;; mainnet revert: 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz
 ;; PEPE Burn-to-Play Competition Contract - Fast Games
 ;; Short competitions (3 blocks = ~30 minutes) where highest burner wins 90% of total burned
 ;; Anyone can create a new game if no active game exists
@@ -131,7 +132,7 @@
     ;; Emit event
     (print {
       contract: THIS-CONTRACT,
-      token-contract: 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz,
+      token-contract: .tokensoft-token-v4k68639zxz,
       event: "game-created",
       game-id: new-game-id,
       creator: creator,
@@ -164,7 +165,7 @@
       (asserts! (> amount u0) ERR-INVALID-AMOUNT)
       
       ;; Transfer PEPE tokens to this contract first
-      (try! (contract-call? 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz transfer 
+      (try! (contract-call? .tokensoft-token-v4k68639zxz transfer 
              amount 
              user 
              THIS-CONTRACT 
@@ -202,7 +203,7 @@
         ;; Emit event
         (print {
           contract: THIS-CONTRACT,
-          token-contract: 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz,
+          token-contract: .tokensoft-token-v4k68639zxz,
           event: "burn-to-compete",
           game-id: current-id,
           user: user,
@@ -254,7 +255,7 @@
     )
       ;; Send winner their reward (90%)
       (if (> winner-amount u0)
-            (try! (as-contract (contract-call? 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz transfer 
+            (try! (as-contract (contract-call? .tokensoft-token-v4k68639zxz transfer 
                     winner-amount 
                     THIS-CONTRACT 
                     winner 
@@ -263,7 +264,7 @@
       
       ;; Burn tokens (9%)
       (if (> burn-amount u0)
-            (try! (as-contract (contract-call? 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz transfer 
+            (try! (as-contract (contract-call? .tokensoft-token-v4k68639zxz transfer 
                     burn-amount 
                     THIS-CONTRACT 
                     BURN-ADDRESS 
@@ -272,7 +273,7 @@
       
       ;; Send fee to contract owner (1%)
       (if (> fee-amount u0)
-            (try! (as-contract (contract-call? 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz transfer 
+            (try! (as-contract (contract-call? .tokensoft-token-v4k68639zxz transfer 
                     fee-amount 
                     THIS-CONTRACT 
                     FAKTORY
@@ -286,7 +287,7 @@
       ;; Emit settlement event
       (print {
         contract: THIS-CONTRACT,
-        token-contract: 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz,
+        token-contract: .tokensoft-token-v4k68639zxz,
         event: "game-settled",
         game-id: game-id,
         total-burned: total-burned,
@@ -331,7 +332,7 @@
     
     (let ((solo-user (unwrap-panic highest-burner)))
       ;; Refund all tokens to the solo participant
-      (try! (as-contract (contract-call? 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz transfer 
+      (try! (as-contract (contract-call? .tokensoft-token-v4k68639zxz transfer 
              total-burned 
              THIS-CONTRACT 
              solo-user 
@@ -344,7 +345,7 @@
       ;; Emit refund event
       (print {
         contract: THIS-CONTRACT,
-        token-contract: 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz,
+        token-contract: .tokensoft-token-v4k68639zxz,
         event: "game-refunded",
         game-id: game-id,
         solo-user: solo-user,
