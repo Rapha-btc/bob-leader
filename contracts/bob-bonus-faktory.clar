@@ -1,5 +1,6 @@
 ;; Burn Bob Daily Bonus Contract
 ;; Selects random bonus recipients from daily burn participants
+(use-trait sip010-trait 'SP3XXMS38VTAWTVPE5682XSBFXPTH7XCPEBTX8AN2.faktory-trait-v1.sip-010-trait)
 
 (define-constant err-block-not-found (err u404))
 (define-constant err-not-at-draw-block (err u400))
@@ -223,26 +224,28 @@
                     get-balance (as-contract tx-sender)))
 
 (define-public (withdraw-dble)
-    (let ((contract-balance-1 (unwrap-panic (contract-call? 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G.built-on-bitcoin-stxcity get-balance (as-contract tx-sender))))
-          (contract-balance-2 (unwrap-panic (contract-call? 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.fakfun-faktory get-balance (as-contract tx-sender)))))
-        (if (> contract-balance-1 u0)
-            (as-contract (contract-call? 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G.built-on-bitcoin-stxcity transfer
-                                        contract-balance-1 tx-sender SPONSOR none))
-            (ok true))
+    (begin
+        (asserts! (is-eq tx-sender SPONSOR) err-unauthorized)
+        (let ((bob-balance (unwrap-panic (contract-call? 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G.built-on-bitcoin-stxcity get-balance (as-contract tx-sender))))
+              (fakfun-balance (unwrap-panic (contract-call? 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.fakfun-faktory get-balance (as-contract tx-sender)))))
             
-            (as-contract (contract-call? 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G.built-on-bitcoin-stxcity transfer
-                                        contract-balance-2 tx-sender SPONSOR none))
-            (ok true)
-        )
-    )
-)
+            (if (> bob-balance u0)
+                (try! (as-contract (contract-call? 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G.built-on-bitcoin-stxcity transfer
+                                            bob-balance (as-contract tx-sender) SPONSOR none)))
+                (ok true))
+            
+            (if (> fakfun-balance u0)
+                (try! (as-contract (contract-call? 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.fakfun-faktory transfer
+                                            fakfun-balance (as-contract tx-sender) SPONSOR none)))
+                (ok true))
+            
+            (ok true))))
 
 (define-public (withdraw-ft (ft <sip010-trait>))
-    (let ((contract-balance (unwrap-panic (contract-call? ft get-balance (as-contract tx-sender)))))
-        (if (> contract-balance u0)
-            (as-contract (contract-call? ft transfer
-                                        contract-balance tx-sender SPONSOR none))
-            (ok true)
-        )
-    )
-)
+    (begin
+        (asserts! (is-eq tx-sender SPONSOR) err-unauthorized)
+        (let ((contract-balance (unwrap-panic (contract-call? ft get-balance (as-contract tx-sender)))))
+            (if (> contract-balance u0)
+                (try! (as-contract (contract-call? ft transfer
+                                            contract-balance (as-contract tx-sender) SPONSOR none)))
+                (ok true)))))
