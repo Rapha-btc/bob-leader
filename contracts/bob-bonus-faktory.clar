@@ -28,6 +28,7 @@
         (time (unwrap! (get-block-info? time block) err-block-not-found)))
         (ok (if is-in-mainnet (+ vrf time) vrf))))
 
+
 (define-map epoch-participants uint (list 1000 principal)) 
 (define-map epoch-bonus-recipients uint principal)
 (define-map epoch-draw-blocks uint uint) 
@@ -54,7 +55,7 @@
         (asserts! (is-none (map-get? epoch-status epoch)) err-epoch-already-drawn)
         (asserts! (is-epoch-finished epoch) err-epoch-not-ready)
         (map-set epoch-participants epoch participants)  
-        (map-set epoch-draw-blocks epoch (+ burn-block-height u6))    
+        (map-set epoch-draw-blocks epoch (+ block-height u6))    ;; 6 times amount of stacks block per burn block
         (map-set epoch-status epoch false)    
         (print {
             event: "epoch-participants-set",
@@ -62,7 +63,7 @@
             epoch-end-block: (calc-epoch-end epoch),
             current-burn-block: burn-block-height,
             participant-count: (len participants),
-            draw-block: (+ burn-block-height u6)
+            draw-block: (+ block-height u6) ;; 6 times amount of stacks block per burn block
         })
         
         (ok true)))
@@ -80,7 +81,7 @@
              (max-bonus (if (> sponsor-bonus taille) sponsor-bonus taille)))
             
             (asserts! (not already-drawn) err-epoch-already-drawn)
-            (asserts! (> burn-block-height draw-block) err-not-at-draw-block)
+            (asserts! (> block-height draw-block) err-not-at-draw-block)
             (asserts! (> taille u0) err-no-participants)
             
             (let
@@ -136,7 +137,7 @@
             is-drawn: is-drawn,
             can-draw: (and (is-some draw-block) 
                           (not is-drawn)
-                          (> burn-block-height (unwrap-panic draw-block)))
+                          (> block-height (unwrap-panic draw-block)))
         }))
 
 ;; Sponsor
@@ -161,22 +162,21 @@
 
 (define-public (fund-bonus (bob-bonus uint))
     (begin
-        (if (> bob-bonus u0)
-            (begin
-                (try! (contract-call? 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G.built-on-bitcoin-stxcity 
-                       transfer bob-bonus tx-sender (as-contract tx-sender) none))
-                (try! (contract-call? 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.fakfun-faktory 
-                       transfer (* bob-bonus u100) tx-sender (as-contract tx-sender) none))
-                (print {
-                    event: "contract-funded",
-                    funder: tx-sender,
-                    bob-bonus: bob-bonus,
-                    fakfun-bonus: (* bob-bonus u100)
-                })
-            )
-            (ok true))  
+        (asserts! (> bob-bonus u0) err-transfer-failed) 
+
+        (try! (contract-call? 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G.built-on-bitcoin-stxcity 
+               transfer bob-bonus tx-sender (as-contract tx-sender) none))
+        (try! (contract-call? 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.fakfun-faktory 
+               transfer (* bob-bonus u100) tx-sender (as-contract tx-sender) none))
         
-        (ok true))) 
+        (print {
+            event: "contract-funded",
+            funder: tx-sender,
+            bob-bonus: bob-bonus,
+            fakfun-bonus: (* bob-bonus u100)
+        })
+        
+        (ok true)))
 
 (define-read-only (get-bob-balance)
     (contract-call? 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G.built-on-bitcoin-stxcity 
