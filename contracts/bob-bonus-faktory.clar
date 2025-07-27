@@ -24,10 +24,9 @@
 
 (define-read-only (get-rnd (block uint))
     (let (
-        (vrf (buff-to-uint-be (unwrap-panic (as-max-len? (unwrap-panic (slice? (unwrap! (get-block-info? vrf-seed block) err-block-not-found) u16 u32)) u16))))
-        (time (unwrap! (get-block-info? time block) err-block-not-found)))
+        (vrf (buff-to-uint-be (unwrap-panic (as-max-len? (unwrap-panic (slice? (unwrap! (get-tenure-info? vrf-seed block) err-block-not-found) u16 u32)) u16))))
+        (time (unwrap! (get-tenure-info? time block) err-block-not-found)))
         (ok (if is-in-mainnet (+ vrf time) vrf))))
-
 
 (define-map epoch-participants uint (list 1000 principal)) 
 (define-map epoch-bonus-recipients uint principal)
@@ -55,7 +54,7 @@
         (asserts! (is-none (map-get? epoch-status epoch)) err-epoch-already-drawn)
         (asserts! (is-epoch-finished epoch) err-epoch-not-ready)
         (map-set epoch-participants epoch participants)  
-        (map-set epoch-draw-blocks epoch (+ block-height u6))    ;; 6 times amount of stacks block per burn block
+        (map-set epoch-draw-blocks epoch (+ stacks-block-height u6))    ;; 6 times amount of stacks block per burn block
         (map-set epoch-status epoch false)    
         (print {
             event: "epoch-participants-set",
@@ -63,7 +62,7 @@
             epoch-end-block: (calc-epoch-end epoch),
             current-burn-block: burn-block-height,
             participant-count: (len participants),
-            draw-block: (+ block-height u6) ;; 6 times amount of stacks block per burn block
+            draw-block: (+ stacks-block-height u6) ;; 6 times amount of stacks block per burn block
         })
         
         (ok true)))
@@ -81,7 +80,7 @@
              (max-bonus (if (> sponsor-bonus taille) sponsor-bonus taille)))
             
             (asserts! (not already-drawn) err-epoch-already-drawn)
-            (asserts! (> block-height draw-block) err-not-at-draw-block)
+            (asserts! (> stacks-block-height draw-block) err-not-at-draw-block)
             (asserts! (> taille u0) err-no-participants)
             
             (let
@@ -137,7 +136,7 @@
             is-drawn: is-drawn,
             can-draw: (and (is-some draw-block) 
                           (not is-drawn)
-                          (> block-height (unwrap-panic draw-block)))
+                          (> stacks-block-height (unwrap-panic draw-block)))
         }))
 
 ;; Sponsor
@@ -146,7 +145,7 @@
         ((next-epoch (+ (current-epoch) u1)))
         (asserts! (is-eq tx-sender SPONSOR) err-unauthorized)
         
-        (unwrap! (map-insert epoch-bonus next-epoch bonus-amount) err-already-set)
+        (asserts! (map-insert epoch-bonus next-epoch bonus-amount) err-already-set)
         
         (print {
             event: "next-epoch-bonus-set",
@@ -195,12 +194,12 @@
             (if (> bob-balance u0)
                 (try! (as-contract (contract-call? 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G.built-on-bitcoin-stxcity transfer
                                             bob-balance (as-contract tx-sender) SPONSOR none)))
-                (ok true))
+                true)
             
             (if (> fakfun-balance u0)
                 (try! (as-contract (contract-call? 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.fakfun-faktory transfer
                                             fakfun-balance (as-contract tx-sender) SPONSOR none)))
-                (ok true))
+                true)
             
             (ok true))))
 
@@ -209,6 +208,6 @@
         (asserts! (is-eq tx-sender SPONSOR) err-unauthorized)
         (let ((contract-balance (unwrap-panic (contract-call? ft get-balance (as-contract tx-sender)))))
             (if (> contract-balance u0)
-                (try! (as-contract (contract-call? ft transfer
-                                            contract-balance (as-contract tx-sender) SPONSOR none)))
+                (as-contract (contract-call? ft transfer
+                                            contract-balance (as-contract tx-sender) SPONSOR none))
                 (ok true)))))
