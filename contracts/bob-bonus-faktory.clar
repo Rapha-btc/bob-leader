@@ -1,6 +1,5 @@
 ;; Burn Bob Daily Bonus Contract
 ;; Selects random bonus recipients from daily burn participants
-(use-trait sip010-trait 'SP3XXMS38VTAWTVPE5682XSBFXPTH7XCPEBTX8AN2.faktory-trait-v1.sip-010-trait)
 
 (define-constant err-block-not-found (err u404))
 (define-constant err-not-at-draw-block (err u400))
@@ -12,8 +11,9 @@
 (define-constant err-epoch-not-ready (err u406))
 (define-constant err-transfer-failed (err u407))
 (define-constant err-already-set (err u408))
+(define-constant err-epoch-already-set (err u409))
 
-(define-constant admin tx-sender) 
+(define-constant admin 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22) 
 (define-constant SPONSOR 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G) 
 
 (define-map epoch-bonus uint uint)
@@ -51,26 +51,23 @@
 (define-public (set-burners (epoch uint) (participants (list 1000 principal)))
     (begin
         (asserts! (is-eq tx-sender admin) err-unauthorized)
-        (asserts! (is-none (map-get? epoch-status epoch)) err-epoch-already-drawn)
+        (asserts! (is-none (map-get? epoch-status epoch)) err-epoch-already-set)
         (asserts! (is-epoch-finished epoch) err-epoch-not-ready)
         (map-set epoch-participants epoch participants)  
-        (map-set epoch-draw-blocks epoch (+ stacks-block-height u6))    ;; 6 times amount of stacks block per burn block
+        (map-set epoch-draw-blocks epoch (+ tenure-height u6))    
         (map-set epoch-status epoch false)    
         (print {
             event: "epoch-participants-set",
             epoch: epoch,
             epoch-end-block: (calc-epoch-end epoch),
-            current-burn-block: burn-block-height,
+            current-burn-block: tenure-height,
             participant-count: (len participants),
-            draw-block: (+ stacks-block-height u6) ;; 6 times amount of stacks block per burn block
+            draw-block: (+ tenure-height u6) 
         })
         
         (ok true)))
 
 (define-public (reveal-winner (epoch uint))
-    (begin
-        (asserts! (is-standard-principal-call) err-standard-principal-only)
-        
         (let 
             ((participants (unwrap! (map-get? epoch-participants epoch) err-no-participants))
              (draw-block (unwrap! (map-get? epoch-draw-blocks epoch) err-not-at-draw-block))
@@ -80,7 +77,7 @@
              (max-bonus (if (> sponsor-bonus taille) sponsor-bonus taille)))
             
             (asserts! (not already-drawn) err-epoch-already-drawn)
-            (asserts! (> stacks-block-height draw-block) err-not-at-draw-block)
+            (asserts! (> tenure-height draw-block) err-not-at-draw-block)
             (asserts! (> taille u0) err-no-participants)
             
             (let
@@ -109,7 +106,7 @@
                     random-seed: random-number
                 })
                 
-                (ok chosen-recipient)))))
+                (ok chosen-recipient))))
 
 ;; Read-only
 (define-read-only (get-epoch-participants (epoch uint))
@@ -136,7 +133,7 @@
             is-drawn: is-drawn,
             can-draw: (and (is-some draw-block) 
                           (not is-drawn)
-                          (> stacks-block-height (unwrap-panic draw-block)))
+                          (> tenure-height (unwrap-panic draw-block)))
         }))
 
 ;; Sponsor
@@ -202,12 +199,3 @@
                 true)
             
             (ok true))))
-
-(define-public (withdraw-ft (ft <sip010-trait>))
-    (begin
-        (asserts! (is-eq tx-sender SPONSOR) err-unauthorized)
-        (let ((contract-balance (unwrap-panic (contract-call? ft get-balance (as-contract tx-sender)))))
-            (if (> contract-balance u0)
-                (as-contract (contract-call? ft transfer
-                                            contract-balance (as-contract tx-sender) SPONSOR none))
-                (ok true)))))
