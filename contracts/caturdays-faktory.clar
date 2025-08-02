@@ -1,6 +1,5 @@
 ;; Caturday Faktory - Saturday LEO Bonus for BOB Winners
 ;; Awards LEO tokens to BOB daily winners on Saturdays
-
 (define-constant err-unauthorized (err u401))
 (define-constant err-not-saturday (err u402))
 (define-constant err-already-claimed (err u403))
@@ -18,28 +17,23 @@
 
 (define-constant SPONSORS (list  SPONSOR_1 SPONSOR_2 admin))
 
-;; Saturday calculation constants
 (define-constant BURN-GENESIS-BLOCK u902351)
 (define-constant EPOCH-LENGTH u144)
-(define-data-var saturday-offset uint u41) ;; Epoch 41 is Saturday, so offset from epoch 0
+(define-data-var saturday-offset uint u41) 
 
-;; Storage
-(define-map saturday-claims uint bool) ;; Track which Saturday epochs have been claimed
-(define-map leo-bonus-amounts uint uint) ;; LEO bonus amount per Saturday epoch
-(define-data-var default-leo-bonus uint u1000000000) ;; Default 1000 LEO (8 decimals)
+(define-map saturday-claims uint bool)
+(define-map leo-bonus-amounts uint uint) 
+(define-data-var default-leo-bonus uint u1000000000) 
 
-;; Calculate if an epoch falls on Saturday
 (define-read-only (is-saturday-epoch (epoch uint))
     (is-eq (mod (- epoch (var-get saturday-offset)) u7) u0))
 
-;; Get the current epoch (from BOB contract logic)
 (define-read-only (calc-epoch (block uint))
     (/ (- block BURN-GENESIS-BLOCK) EPOCH-LENGTH))
 
 (define-read-only (current-epoch)
     (calc-epoch burn-block-height))
 
-;; Check if we can claim Saturday LEO bonus right now
 (define-read-only (can-claim-now)
     (let ((current-epoch (current-epoch))
           (previous-epoch (- current-epoch u1))
@@ -60,7 +54,6 @@
   )
 )
 
-;; Admin function to adjust Saturday offset if timing slips
 (define-public (adjust-saturday-offset (new-offset uint))
     (begin
         (asserts! (is-eq tx-sender admin) err-unauthorized)
@@ -74,7 +67,6 @@
             })
             (ok true))))
 
-;; Admin function to set LEO bonus for specific Saturday epoch
 (define-public (set-saturday-leo-bonus (epoch uint) (leo-amount uint))
     (begin
         (asserts! (is-sponsor tx-sender) err-unauthorized)
@@ -87,7 +79,6 @@
         })
         (ok true)))
 
-;; Set default LEO bonus amount
 (define-public (set-default-leo-bonus (leo-amount uint))
     (begin
         (asserts! (is-eq tx-sender admin) err-unauthorized)
@@ -98,8 +89,6 @@
         })
         (ok true)))
 
-;; Main function: Claim Saturday LEO bonus for previous day's BOB winner
-;; When it's Saturday (e.g., epoch 41), award LEO to Friday's winner (epoch 40)
 (define-public (claim-saturday-leo-bonus)
     (let ((current-epoch (current-epoch))
           (previous-epoch (- current-epoch u1))
@@ -109,15 +98,12 @@
           (leo-bonus (default-to (var-get default-leo-bonus) (map-get? leo-bonus-amounts previous-epoch)))
           (contract-leo-balance (unwrap-panic (contract-call? 'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token get-balance (as-contract tx-sender)))))
         
-        ;; Validation checks
         (asserts! is-current-saturday err-not-saturday)
         (asserts! (not is-already-claimed) err-already-claimed)
         (asserts! (>= contract-leo-balance leo-bonus) err-insufficient-balance)
         
-        ;; Mark previous epoch as claimed (since that's the winner we're rewarding)
         (map-set saturday-claims previous-epoch true)
         
-        ;; Transfer LEO tokens to previous day's BOB winner
         (try! (as-contract (contract-call? 'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token transfer 
                            leo-bonus (as-contract tx-sender) bob-winner none)))
         
@@ -132,7 +118,6 @@
         
         (ok bob-winner)))
 
-;; Fund the contract with LEO tokens
 (define-public (fund-leo-bonus (leo-amount uint))
     (begin
         (asserts! (> leo-amount u0) err-transfer-failed)
@@ -148,7 +133,6 @@
         
         (ok true)))
 
-;; Withdraw LEO tokens (admin/sponsor only)
 (define-public (withdraw-leo)
     (let ((withdrawer tx-sender))
         (asserts! (is-sponsor tx-sender) err-unauthorized)
@@ -167,7 +151,6 @@
             
             (ok leo-balance))))
 
-;; Read-only functions
 (define-read-only (get-leo-balance)
     (contract-call? 'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token get-balance (as-contract tx-sender)))
 
@@ -184,7 +167,6 @@
     (var-get default-leo-bonus))
 
 
-;; Get comprehensive Saturday info for current situation
 (define-read-only (get-current-saturday-info)
     (let ((current-epoch (current-epoch))
           (previous-epoch (- current-epoch u1))
