@@ -5,10 +5,39 @@ authors = []
 telemetry = false
 cache_dir = './.cache'
 
-# If using mainnet (change to testnet if needed)
-[repl]
-network = "mainnet"
+[[project.requirements]]
+contract_id = 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G.built-on-bitcoin-stxcity'
 
+[[project.requirements]]
+contract_id = 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.fakfun-faktory'
+
+[[project.requirements]]
+contract_id = 'SP3XXMS38VTAWTVPE5682XSBFXPTH7XCPEBTX8AN2.faktory-trait-v1'
+
+[[project.requirements]]
+contract_id = 'SP29D6YMDNAKN1P045T6Z817RTE1AC0JAA99WAX2B.bob-bonus-faktory'
+
+[[project.requirements]]
+contract_id = 'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token'
+[contracts.bob-bonus-faktory]
+path = 'contracts/bob-bonus-faktory.clar'
+clarity_version = 3
+epoch = 3.1
+
+[contracts.burn-pepe-faktory]
+path = 'contracts/burn-pepe-faktory.clar'
+clarity_version = 3
+epoch = 3.1
+
+[contracts.caturdays-faktory]
+path = 'contracts/caturdays-faktory.clar'
+clarity_version = 3
+epoch = 3.1
+
+[contracts.tokensoft-token-v4k68639zxz]
+path = 'contracts/tokensoft-token-v4k68639zxz.clar'
+clarity_version = 3
+epoch = 3.1
 [repl.analysis]
 passes = ['check_checker']
 
@@ -20,29 +49,4 @@ callee_filter = false
 
 [repl.remote_data]
 enabled = true
-api_url = 'https://api.hiro.so'  # For mainnet
-
-# Requirements for BOB and FAKFUN tokens
-[[project.requirements]]
-contract_id = 'SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G.built-on-bitcoin-stxcity'
-
-[[project.requirements]]
-contract_id = 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.fakfun-faktory'
-
-[[project.requirements]]
-contract_id = 'SP3XXMS38VTAWTVPE5682XSBFXPTH7XCPEBTX8AN2.faktory-trait-v1'
-
-[contracts.burn-pepe-faktory]
-path = 'contracts/burn-pepe-faktory.clar'
-clarity_version = 3
-epoch = 3.1
-
-[contracts.tokensoft-token-v4k68639zxz]
-path = 'contracts/tokensoft-token-v4k68639zxz.clar'
-clarity_version = 3
-epoch = 3.1
-
-[contracts.bob-bonus-faktory]
-path = 'contracts/bob-bonus-faktory.clar'
-clarity_version = 3
-epoch = 3.1
+api_url = 'https://api.hiro.so'
